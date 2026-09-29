@@ -8,8 +8,9 @@ const slides = require("./slides");
 const css = require("./style");
 
 const FPS = 60; // tăng lên 60fps cho mượt
-const WIDTH = 1920;
+const WIDTH = 1920;   // kích thước layout CSS (giữ nguyên)
 const HEIGHT = 1080;
+const SCALE = 2;      // deviceScaleFactor: 2 -> render ở 3840x2160 (4K UHD)
 const FRAMES_DIR = path.join(__dirname, "frames");
 const VIDEO_NOAUDIO = path.join(__dirname, "kiro-tutorial-silent.mp4");
 const MUSIC = path.join(__dirname, "music.wav");
@@ -25,7 +26,7 @@ function pageHtml(slideHtml) {
 
   const browser = await puppeteer.launch({
     args: ["--no-sandbox", "--disable-setuid-sandbox", "--force-color-profile=srgb"],
-    defaultViewport: { width: WIDTH, height: HEIGHT, deviceScaleFactor: 1 },
+    defaultViewport: { width: WIDTH, height: HEIGHT, deviceScaleFactor: SCALE },
   });
   const page = await browser.newPage();
 
