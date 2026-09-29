@@ -30,14 +30,34 @@ body[data-preset="tiktok"] .slide { padding: 220px 96px 380px 96px; gap: 40px; }
 
 .slide-center { align-items: center; text-align: center; justify-content: center; }
 
+/* Nền tech mới: xanh đen sâu + 2 vùng glow màu + lưới grid mờ */
 .dark-bg {
-  background: radial-gradient(1200px 800px at 80% -10%, #1e2a4a 0%, #0d1220 55%);
   color: #e8ecf5;
+  background:
+    radial-gradient(900px 700px at 12% 8%, rgba(100,210,255,.18), transparent 60%),
+    radial-gradient(1000px 800px at 92% 100%, rgba(255,159,10,.16), transparent 60%),
+    linear-gradient(160deg, #0b1020 0%, #0a0e1a 60%, #090b14 100%);
 }
+.dark-bg::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(circle at 50% 40%, #000 55%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle at 50% 40%, #000 55%, transparent 100%);
+}
+/* Nền gradient mới: mesh nhiều màu tím–xanh–hồng, sống động hơn */
 .gradient-bg {
-  background: linear-gradient(135deg, #5b6cff 0%, #8b3bff 50%, #d63aff 100%);
   color: #fff;
+  background:
+    radial-gradient(700px 700px at 15% 20%, #6a5cff 0%, transparent 55%),
+    radial-gradient(800px 800px at 85% 30%, #d63aff 0%, transparent 55%),
+    radial-gradient(700px 700px at 50% 100%, #00c2ff 0%, transparent 55%),
+    linear-gradient(135deg, #3a1c71 0%, #5b2a9d 50%, #2a1160 100%);
 }
+/* đảm bảo nội dung nằm trên lớp grid */
+.slide > * { position: relative; z-index: 1; }
 
 /* ---------- Typography (mặc định = youtube) ---------- */
 h1 { font-size: 108px; font-weight: 800; letter-spacing: -2px; line-height: 1.05; }
@@ -129,6 +149,54 @@ body[data-preset="tiktok"] .pipe-arrow {
 .c-com { color: #6b7a99; }
 .c-key { color: #d63aff; }
 body[data-preset="tiktok"] .code-block { font-size: 40px; max-width: 100%; white-space: pre-wrap; }
+
+/* ---------- Phone mockup (vẽ bằng CSS) ---------- */
+.phone {
+  width: 150px; height: 300px; margin: 0 auto 20px;
+  border-radius: 34px; position: relative;
+  background: linear-gradient(160deg, #2a2f3e, #12151f);
+  border: 3px solid rgba(255,255,255,.18);
+  box-shadow: 0 20px 50px rgba(0,0,0,.5), inset 0 0 0 6px #0a0d16;
+}
+.phone .screen {
+  position: absolute; inset: 12px; border-radius: 24px;
+  background: linear-gradient(160deg, #1b2745, #0d1730);
+  overflow: hidden;
+}
+.phone .island {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  width: 54px; height: 16px; border-radius: 10px; background: #05070d;
+}
+.phone.p18 .island { width: 40px; } /* Dynamic Island nhỏ hơn */
+.phone .cam {
+  position: absolute; top: 16px; left: 16px;
+  width: 60px; height: 60px; border-radius: 18px;
+  background: radial-gradient(circle at 30% 30%, #333a4d, #14171f);
+  border: 2px solid rgba(255,255,255,.1);
+}
+.phone .cam::before, .phone .cam::after {
+  content: ""; position: absolute; width: 20px; height: 20px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #6fb4ff, #10233f);
+  border: 2px solid #0a0d16;
+}
+.phone .cam::before { top: 6px; left: 6px; }
+.phone .cam::after  { bottom: 6px; right: 6px; }
+.phone.p18 { background: linear-gradient(160deg, #3a2f22, #16120c); border-color: rgba(255,159,10,.35); }
+.phone.p18 .screen { background: linear-gradient(160deg, #12233f, #0a1428); }
+body[data-preset="tiktok"] .phone { width: 130px; height: 260px; }
+
+/* ---------- Bar chart hiệu năng ---------- */
+.bars { display: flex; align-items: flex-end; gap: 60px; height: 320px; margin: 30px auto 0; justify-content: center; }
+.bar-group { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.bar {
+  width: 130px; border-radius: 16px 16px 0 0; position: relative;
+  display: flex; align-items: flex-start; justify-content: center;
+  color: #0a0d16; font-weight: 800; font-size: 30px; padding-top: 14px;
+}
+.bar.b17 { background: linear-gradient(180deg, #ffe066, #f5c518); }
+.bar.b18 { background: linear-gradient(180deg, #64d2ff, #2a9fd6); }
+.bar-label { font-size: 28px; opacity: .85; text-align: center; }
+.bar-cap { font-size: 24px; opacity: .55; }
 
 /* ---------- Compare: 2 cột thiết bị ---------- */
 .vs { display: flex; align-items: stretch; gap: 40px; margin-top: 20px; }

@@ -22,6 +22,7 @@ module.exports = [
         <div class="step-tag anim-left">Tổng quan</div>
         <div class="vs">
           <div class="vs-col anim-up delay-1">
+            <div class="phone p17"><div class="screen"><div class="island"></div><div class="cam"></div></div></div>
             <div class="vs-name">iPhone 17</div>
             <div class="vs-year">Ra mắt 9/2025</div>
             <div class="vs-big">A19</div>
@@ -29,6 +30,7 @@ module.exports = [
           </div>
           <div class="vs-mid anim-up delay-2">VS</div>
           <div class="vs-col hot anim-up delay-3">
+            <div class="phone p18"><div class="screen"><div class="island"></div><div class="cam"></div></div></div>
             <div class="vs-name">iPhone 18 Pro</div>
             <div class="vs-year">Ra mắt 9/2026</div>
             <div class="vs-big blue">A20 Pro</div>
@@ -44,22 +46,15 @@ module.exports = [
     html: `
       <div class="slide dark-bg">
         <div class="step-tag anim-left">Hiệu năng</div>
-        <h2 class="anim-up">Chip xử lý</h2>
-        <div style="margin-top:20px">
-          <div class="spec-row anim-up delay-1">
-            <div class="spec-a">A19 · tiến trình cũ</div>
-            <div class="spec-label">CPU</div>
-            <div class="spec-b win">A20 Pro · nhanh hơn ~20%</div>
+        <h2 class="anim-up">Chip xử lý — GPU nhanh hơn tới 40%</h2>
+        <div class="bars">
+          <div class="bar-group anim-up delay-1">
+            <div class="bar b17" style="height:210px">100%</div>
+            <div class="bar-label">iPhone 17<br><span class="bar-cap">A19 · GPU 5 nhân</span></div>
           </div>
-          <div class="spec-row anim-up delay-2">
-            <div class="spec-a">GPU 5 nhân</div>
-            <div class="spec-label">Đồ họa</div>
-            <div class="spec-b win">nhanh hơn ~40%</div>
-          </div>
-          <div class="spec-row anim-up delay-3">
-            <div class="spec-a">Tản nhiệt tiêu chuẩn</div>
-            <div class="spec-label">Nhiệt</div>
-            <div class="spec-b win">Buồng hơi (vapor chamber)</div>
+          <div class="bar-group anim-up delay-2">
+            <div class="bar b18" style="height:294px">~140%</div>
+            <div class="bar-label">iPhone 18 Pro<br><span class="bar-cap">A20 Pro · 2nm · buồng hơi</span></div>
           </div>
         </div>
       </div>`,

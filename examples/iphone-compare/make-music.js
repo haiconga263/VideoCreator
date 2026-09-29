@@ -1,12 +1,12 @@
 // Tự sinh nhạc nền (không vướng bản quyền) và xuất file WAV.
-// Phong cách: ambient/lo-fi nhẹ nhàng — vòng hợp âm arpeggio + pad + kick nhẹ.
+// Phong cách: UPBEAT / energetic — tempo ~124 BPM, beat trống rõ (kick+snare+hi-hat),
+// bassline chạy nốt móc đơn, arpeggio nhanh + pluck. Sôi động, hợp video công nghệ.
 // Không dùng thư viện ngoài, tự ghi PCM WAV.
 
 const fs = require("fs");
 const path = require("path");
 
 const SAMPLE_RATE = 44100;
-// Tự tính độ dài nhạc = tổng thời lượng các slide (khớp video) + 0.3s đệm.
 let DURATION = 23;
 try {
   const slides = require("./slides");
@@ -14,86 +14,113 @@ try {
 } catch (e) {}
 const N = SAMPLE_RATE * DURATION;
 
-// Tần số nốt (Hz)
 const NOTE = {
+  E1: 41.2, G1: 49.0, A1: 55.0, C2: 65.41, D2: 73.42, E2: 82.41, F2: 87.31, G2: 98.0, A2: 110.0,
   C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.0, A3: 220.0, B3: 246.94,
   C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.0, A4: 440.0, B4: 493.88,
-  C5: 523.25, D5: 587.33, E5: 659.25, G5: 783.99,
+  C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880.0,
 };
 
-// Vòng hợp âm 4 ô nhịp (mỗi ô ~2.875s để 8 ô = 23s), kiểu I–V–vi–IV dịu
-const chords = [
-  ["C3", "E4", "G4", "C5"], // C
-  ["G3", "D4", "G4", "B4"], // G
-  ["A3", "E4", "A4", "C5"], // Am
-  ["F3", "C4", "F4", "A4"], // F
-  ["C3", "E4", "G4", "C5"],
-  ["G3", "D4", "G4", "B4"],
-  ["A3", "E4", "A4", "C5"],
-  ["F3", "C4", "F4", "A4"],
+// ---- Nhịp điệu ----
+const BPM = 124;
+const beatDur = 60 / BPM;      // 1 phách (giây)
+const barDur = beatDur * 4;    // 1 ô nhịp 4/4
+const step16 = beatDur / 4;    // 1 nốt móc kép (1/16)
+
+// Vòng hợp âm sôi động (Am–F–C–G, kiểu pop/EDM), lặp lại
+const prog = [
+  { root: "A2", notes: ["A3", "C4", "E4"] },  // Am
+  { root: "F2", notes: ["F3", "A3", "C4"] },  // F
+  { root: "C3", notes: ["C4", "E4", "G4"] },  // C
+  { root: "G2", notes: ["G3", "B3", "D4"] },  // G
 ];
-const barDur = DURATION / chords.length;
 
-function softClip(x) {
-  return Math.tanh(x * 1.2);
+// Nốt arpeggio theo từng bước 1/16 (cao, tươi sáng)
+function arpNote(chord, i16) {
+  const seq = [chord.notes[0], chord.notes[1], chord.notes[2], chord.notes[1]];
+  return NOTE[seq[i16 % 4]] * 2;
 }
 
-// Sóng "mềm": trộn sine + chút harmonic để dày tiếng
-function voice(freq, t, phase = 0) {
-  const w = 2 * Math.PI * freq * t + phase;
-  return (
-    Math.sin(w) * 0.6 +
-    Math.sin(2 * w) * 0.18 +
-    Math.sin(3 * w) * 0.08
-  );
+function softClip(x) { return Math.tanh(x * 1.1); }
+function saw(w) { // xấp xỉ răng cưa bằng vài harmonic
+  return (Math.sin(w) + Math.sin(2*w)/2 + Math.sin(3*w)/3 + Math.sin(4*w)/4) * 0.5;
 }
+function noise() { return Math.random() * 2 - 1; }
 
 const buf = new Float32Array(N);
 
 for (let i = 0; i < N; i++) {
   const t = i / SAMPLE_RATE;
-  const bar = Math.min(chords.length - 1, Math.floor(t / barDur));
-  const tInBar = t - bar * barDur;
-  const chord = chords[bar];
+  const barIdx = Math.floor(t / barDur);
+  const chord = prog[barIdx % prog.length];
+  const tInBar = t - barIdx * barDur;
+  const beatInBar = Math.floor(tInBar / beatDur);   // 0..3
+  const i16 = Math.floor(tInBar / step16);          // 0..15
+  const tIn16 = tInBar - i16 * step16;
+  const tInBeat = tInBar - beatInBar * beatDur;
 
   let s = 0;
 
-  // 1) Pad: giữ hợp âm, âm lượng nhẹ, có vibrato rất chậm
-  const padEnv = Math.min(1, tInBar / 0.4) * Math.min(1, (barDur - tInBar) / 0.5 + 0.5);
-  for (const n of chord) {
-    const f = NOTE[n];
-    s += voice(f, t, Math.sin(t * 0.7) * 0.3) * 0.10 * padEnv;
+  // 1) KICK: mỗi phách (4 on-the-floor) — mạnh, sôi động
+  {
+    const k = tInBeat;
+    if (k < 0.14) {
+      const env = Math.exp(-k * 32);
+      const freq = 130 * Math.exp(-k * 28) + 48;
+      s += Math.sin(2 * Math.PI * freq * k) * 0.9 * env;
+    }
   }
 
-  // 2) Arpeggio: chạy các nốt của hợp âm, mỗi nốt ~ barDur/4
-  const stepDur = barDur / 4;
-  const step = Math.floor(tInBar / stepDur) % chord.length;
-  const noteFreq = NOTE[chord[(step + 1) % chord.length]] * 2; // cao 1 quãng tám
-  const tInStep = tInBar - step * stepDur;
-  const arpEnv = Math.exp(-tInStep * 4) * Math.min(1, tInStep / 0.01);
-  s += voice(noteFreq, t) * 0.14 * arpEnv;
-
-  // 3) Bass: nốt gốc hợp âm
-  const bassEnv = Math.min(1, tInBar / 0.05) * Math.exp(-tInBar * 0.6);
-  s += Math.sin(2 * Math.PI * NOTE[chord[0]] * 0.5 * t) * 0.16 * bassEnv;
-
-  // 4) Kick nhẹ ở đầu mỗi nửa ô nhịp
-  const beat = tInBar % (barDur / 2);
-  if (beat < 0.12) {
-    const kEnv = Math.exp(-beat * 40);
-    const kFreq = 120 * Math.exp(-beat * 30) + 45;
-    s += Math.sin(2 * Math.PI * kFreq * beat) * 0.35 * kEnv;
+  // 2) SNARE/CLAP: phách 2 và 4 (backbeat)
+  if (beatInBar === 1 || beatInBar === 3) {
+    const sn = tInBeat;
+    if (sn < 0.14) {
+      const env = Math.exp(-sn * 26);
+      s += noise() * 0.30 * env;
+      s += Math.sin(2 * Math.PI * 180 * sn) * 0.10 * env;
+    }
   }
 
-  // Fade in toàn bài (1s) và fade out (1.5s cuối)
-  const gIn = Math.min(1, t / 1.0);
-  const gOut = Math.min(1, (DURATION - t) / 1.5);
-  s *= gIn * gOut * 0.7;
+  // 3) HI-HAT: mỗi nốt móc kép (16th) — tạo cảm giác nhanh, năng lượng
+  {
+    const h = tIn16;
+    const open = i16 % 4 === 2; // hé mở nhẹ
+    const env = Math.exp(-h * (open ? 40 : 90));
+    s += noise() * (open ? 0.10 : 0.06) * env;
+  }
+
+  // 4) BASS: chạy nốt móc đơn (8th) theo nốt gốc hợp âm — nảy, groovy
+  {
+    const b8 = Math.floor(tInBar / (beatDur / 2));
+    const tIn8 = tInBar - b8 * (beatDur / 2);
+    const env = Math.min(1, tIn8 / 0.008) * Math.exp(-tIn8 * 5);
+    const bf = NOTE[chord.root];
+    s += saw(2 * Math.PI * bf * t) * 0.28 * env;
+  }
+
+  // 5) ARP pluck nhanh (16th) — tươi sáng, dẫn dắt
+  {
+    const env = Math.min(1, tIn16 / 0.005) * Math.exp(-tIn16 * 9);
+    const f = arpNote(chord, i16);
+    s += saw(2 * Math.PI * f * t) * 0.12 * env;
+  }
+
+  // 6) PAD hợp âm nền (giữ nhẹ để dày tiếng, không làm đục beat)
+  {
+    let pad = 0;
+    for (const n of chord.notes) pad += Math.sin(2 * Math.PI * NOTE[n] * t);
+    s += pad * 0.035;
+  }
+
+  // Fade in (0.5s) / fade out (1.2s)
+  const gIn = Math.min(1, t / 0.5);
+  const gOut = Math.min(1, (DURATION - t) / 1.2);
+  s *= gIn * gOut * 0.62;
 
   buf[i] = softClip(s);
 }
 
-// Ghi ra WAV 16-bit mono
+// Ghi WAV 16-bit mono
 const bytesPerSample = 2;
 const dataSize = N * bytesPerSample;
 const out = Buffer.alloc(44 + dataSize);
@@ -102,8 +129,8 @@ out.writeUInt32LE(36 + dataSize, 4);
 out.write("WAVE", 8);
 out.write("fmt ", 12);
 out.writeUInt32LE(16, 16);
-out.writeUInt16LE(1, 20); // PCM
-out.writeUInt16LE(1, 22); // mono
+out.writeUInt16LE(1, 20);
+out.writeUInt16LE(1, 22);
 out.writeUInt32LE(SAMPLE_RATE, 24);
 out.writeUInt32LE(SAMPLE_RATE * bytesPerSample, 28);
 out.writeUInt16LE(bytesPerSample, 32);
@@ -117,4 +144,4 @@ for (let i = 0; i < N; i++) {
 
 const file = path.join(__dirname, "music.wav");
 fs.writeFileSync(file, out);
-console.log("Đã tạo nhạc nền:", file, `(${DURATION}s)`);
+console.log("Đã tạo nhạc nền (upbeat ~" + BPM + " BPM):", file, `(${DURATION}s)`);
