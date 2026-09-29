@@ -49,20 +49,40 @@ To add a new animation: define a `@keyframes`, then a class that applies it with
 
 Change colors/fonts by editing the CSS custom values (backgrounds, `.accent`, font sizes).
 
-## 3. Resolution & FPS — `render.js`
+## 3. Resolution, FPS & platform preset — `render.js`
 
 Top-of-file constants:
 
 ```js
-const FPS = 60;      // 30 = faster render/smaller file; 60 = smoother
-const WIDTH = 1920;  // CSS layout width — keep at 1920
-const HEIGHT = 1080; // CSS layout height — keep at 1080
-const SCALE = 2;     // deviceScaleFactor: 1=1080p, 2=4K(3840x2160), 3=8K
+const FPS = 60;   // 30 = faster render/smaller file; 60 = smoother
+const SCALE = 2;  // deviceScaleFactor: 1=base, 2=4K, 3=8K
 ```
 
+Preset (chosen via `--preset`) sets the base CSS layout size and output name:
+
+```js
+const PRESETS = {
+  youtube: { w: 1920, h: 1080, out: "...-youtube.mp4" }, // 16:9 landscape
+  tiktok:  { w: 1080, h: 1920, out: "...-tiktok.mp4"  }, // 9:16 vertical
+};
+```
+
+- Run `node render.js --preset youtube` or `--preset tiktok`. Default is `youtube`.
+- Final pixels = base × SCALE (e.g. tiktok @ SCALE 2 → 2160×3840).
 - Prefer changing `SCALE` for resolution — never rewrite the CSS to larger pixel sizes.
-- Render time scales roughly with `FPS × SCALE²`. 4K@60 can take several minutes.
+- Render time scales roughly with `FPS × SCALE²`. 4K@60 can take several minutes per preset.
 - `fadeDur` controls the cross-fade between slides (seconds).
+- Frames go to `frames_<preset>/` so the two presets don't clobber each other.
+
+### Making a new platform preset
+Add an entry to `PRESETS` with the target base `w`/`h` (keep it 1/SCALE of the final size),
+then add matching `body[data-preset="<name>"]` rules in `style.js` for that orientation.
+
+### Vertical (9:16) layout notes
+In `style.js`, `body[data-preset="tiktok"]` rules: stack `.cards`/`.pipeline` into columns,
+enlarge fonts, and set slide padding `220px 96px 380px 96px` to keep content out of TikTok's
+right-side buttons and bottom caption area. Replace horizontal `→` arrows with a
+CSS-border triangle (a rotated arrow glyph renders as tofu).
 
 ### How deterministic seeking works
 For each slide, `render.js`:

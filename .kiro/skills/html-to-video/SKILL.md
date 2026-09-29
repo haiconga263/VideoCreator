@@ -64,9 +64,35 @@ resolution/FPS knobs, and the music generator.
 ## Run
 
 ```bash
-node make-music.js   # optional: create background music (music.wav)
-node render.js       # render frames -> stitch -> output MP4 (with music if present)
+node make-music.js               # optional: create background music (music.wav)
+node render.js --preset youtube  # 16:9 landscape (default) -> *-youtube.mp4
+node render.js --preset tiktok   # 9:16 vertical -> *-tiktok.mp4 (also for Shorts/Reels)
 ```
+
+## Platform aspect ratios (YouTube vs TikTok)
+
+Different platforms need different orientations — you cannot just rotate; the layout must be
+re-flowed. The templates support both via a `--preset` flag that sets dimensions and a
+`body[data-preset]` attribute the CSS keys off.
+
+| | YouTube (landscape) | TikTok / Shorts / Reels (vertical) |
+|---|---|---|
+| Aspect ratio | 16:9 | 9:16 |
+| Resolution (SCALE=2) | 3840×2160 | 2160×3840 |
+| Layout | side-by-side (rows) | stacked (columns), larger text |
+| Safe zone | full frame usable | reserve right (~120px) + bottom (~250–300px) for UI |
+| Duration | any | short, best 15–60s |
+
+Vertical-layout rules baked into `style.template.js` (`body[data-preset="tiktok"]`):
+- Cards/pipeline stack vertically instead of in a row.
+- Fonts enlarged for phone readability.
+- Extra top/bottom padding reserves the TikTok safe zone (buttons on the right, caption
+  below) so nothing important gets covered.
+- Horizontal arrows are replaced with CSS-border triangles (a rotated "→" glyph renders as
+  tofu; drawing the triangle with borders avoids any font dependency).
+
+Use `preview.template.js` (copy to `preview.js`) to screenshot a couple of slides for a
+preset quickly before committing to a full render: `node preview.js tiktok`.
 
 ## Key techniques (why this works well)
 

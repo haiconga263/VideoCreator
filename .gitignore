@@ -1,5 +1,8 @@
 node_modules/
 frames/
+frames_*/
 music.wav
+_silent_*.mp4
 kiro-tutorial-silent.mp4
+preview_*.png
 *.log
