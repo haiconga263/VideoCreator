@@ -41,7 +41,8 @@ gradients in `style.js`.
 | Code block| `.code-block` with `.c-com`/`.c-key` spans | Code snippet w/ highlight |
 | VS columns| `.vs > .vs-col (.hot) + .vs-mid` | Side-by-side comparison |
 | Spec row  | `.spec-row > .spec-a / .spec-label / .spec-b (.win)` | A-vs-B feature table row |
-| Phone mock| `.phone (.p17/.p18) > .screen > .island + .cam` | CSS device illustration |
+| Phone mock| `.phone (.p17/.p18) > .screen > .island + .cam` | CSS phone illustration |
+| Laptop mock| `.laptop (.black) > .lid > .notch + .display; .base` | CSS laptop illustration (`.black` = Space Black) |
 | Bar chart | `.bars > .bar-group > .bar (.b17/.b18) + .bar-label` | Simple 2-bar comparison chart |
 
 All accept the `anim-*` / `delay-*` classes from `video-animation`.
