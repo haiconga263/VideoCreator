@@ -17,20 +17,68 @@ make-music.js  ──►  music.wav  ──────────────�
 3. **`render.js`** — Puppeteer đặt `currentTime` cho animation ở mỗi frame (60fps), chụp PNG, rồi FFmpeg ghép frame + trộn nhạc nền.
 4. **`make-music.js`** — tự tổng hợp nhạc nền ambient/lo-fi (không vướng bản quyền) ra `music.wav`.
 5. **`preview.js`** — chụp thử vài slide cho 1 preset để kiểm tra layout nhanh.
+6. **`run.sh` / `run.bat`** — script chạy toàn bộ pipeline trên máy local (khuyến nghị).
 
 ## Yêu cầu
 
 - Node.js 18+
-- Font emoji (ví dụ Noto Color Emoji) để hiển thị icon
-- Các gói npm: `puppeteer`, `ffmpeg-static`
+- Font emoji (macOS có sẵn; Linux cài `fonts-noto-color-emoji`) để hiển thị icon
+- FFmpeg đi kèm qua gói `ffmpeg-static` (không cần cài riêng)
 
-## Cài đặt & chạy
+## Chạy trên máy local (khuyến nghị — nhanh hơn)
+
+Có sẵn script tự lo mọi thứ (cài deps, tạo nhạc, render):
 
 ```bash
-npm install puppeteer ffmpeg-static
-node make-music.js                # tạo nhạc nền music.wav
-node render.js --preset youtube   # xuất bản ngang 16:9 -> kiro-tutorial-youtube.mp4
-node render.js --preset tiktok    # xuất bản dọc 9:16  -> kiro-tutorial-tiktok.mp4
+# macOS / Linux
+chmod +x run.sh
+./run.sh                     # cài deps + tạo nhạc + render CẢ HAI preset
+./run.sh --preset youtube    # chỉ YouTube
+./run.sh --preset tiktok     # chỉ TikTok
+```
+
+```bat
+:: Windows
+run.bat
+run.bat --preset tiktok
+```
+
+Hoặc chạy thủ công qua npm:
+
+```bash
+npm install
+npm run music     # tạo nhạc nền music.wav
+npm run youtube   # xuất bản ngang 16:9
+npm run tiktok    # xuất bản dọc 9:16
+npm run all       # cả hai
+```
+
+Yêu cầu máy local: **Node.js 18+**. FFmpeg đi kèm qua `ffmpeg-static` (không cần cài riêng).
+macOS đã có sẵn font emoji; trên Linux nên cài `fonts-noto-color-emoji`.
+
+## Các cờ điều khiển của `render.js`
+
+`node render.js [--preset youtube|tiktok|youtube,tiktok|all] [cờ...]`
+
+| Cờ | Ý nghĩa |
+|----|---------|
+| `--frames-only` | Chỉ render và **lưu frame** vào `frames_<preset>/`, không ghép video |
+| `--video-only` | Không render; chỉ **ghép video từ frame đã lưu** |
+| `--reuse-frames` | Nếu frame đã đủ số lượng thì dùng lại (bỏ qua render) |
+| `--clean` | Xóa thư mục frame của preset trước khi render |
+| `--no-music` | Xuất video không nhạc |
+| `--fps <n>` | Số khung hình/giây (mặc định 60) |
+| `--scale <n>` | deviceScaleFactor: 1=base, **2=4K**, 3=8K (mặc định 2) |
+
+> **Frame luôn được giữ lại** (ở `frames_<preset>/`) trừ khi dùng `--clean`. Nhờ đó bạn
+> có thể render 1 lần rồi ghép lại video nhiều lần bằng `--video-only` mà không phải render lại.
+
+Ví dụ quy trình tách bước:
+
+```bash
+node render.js --preset all --frames-only   # bước 1: render + lưu toàn bộ frame
+node render.js --preset youtube --video-only # bước 2: chỉ xuất video YouTube từ frame đã có
+node render.js --preset tiktok  --video-only # xuất tiếp video TikTok, không render lại
 ```
 
 ## Tỉ lệ khung hình theo nền tảng

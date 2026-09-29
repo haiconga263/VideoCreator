@@ -48,14 +48,18 @@ node -e "(async()=>{const p=require('puppeteer');const b=await p.launch({args:['
 
 ## Files to create
 
-Copy the four templates in `assets/` into the project and rename them (drop `.template`):
+Copy the templates in `assets/` into the project and rename them (drop `.template`):
 
 | Template asset | Copy to | Purpose |
 |----------------|---------|---------|
-| `assets/slides.template.js`     | `slides.js`     | Slide content + per-slide HTML (edit text here) |
-| `assets/style.template.js`      | `style.js`      | Shared CSS + `@keyframes` animations (seekable) |
-| `assets/make-music.template.js` | `make-music.js` | Generates royalty-free `music.wav` (ambient/lo-fi) |
-| `assets/render.template.js`     | `render.js`     | Renders frames + stitches video + mixes music |
+| `assets/slides.template.js`      | `slides.js`      | Slide content + per-slide HTML (edit text here) |
+| `assets/style.template.js`       | `style.js`       | Shared CSS + `@keyframes` animations (seekable); per-preset layouts |
+| `assets/make-music.template.js`  | `make-music.js`  | Generates royalty-free `music.wav` (ambient/lo-fi) |
+| `assets/render.template.js`      | `render.js`      | Renders/saves frames + stitches video + mixes music (flag-driven) |
+| `assets/preview.template.js`     | `preview.js`     | Screenshot a couple slides for a preset to check layout fast |
+| `assets/package.template.json`   | `package.json`   | Deps + npm scripts (`music`, `youtube`, `tiktok`, `all`, ...) |
+| `assets/run.template.sh`         | `run.sh`         | One-shot local runner (macOS/Linux): install + music + render |
+| `assets/run.template.bat`        | `run.bat`        | One-shot local runner (Windows) |
 
 Then customize `slides.js` (content) and `style.js` (look). See
 `references/customization.md` for the full guide to slide structure, animation classes,
@@ -63,10 +67,37 @@ resolution/FPS knobs, and the music generator.
 
 ## Run
 
+For the user's local machine, ship `run.template.sh` (→ `run.sh`, macOS/Linux) and
+`run.template.bat` (→ `run.bat`, Windows) plus `package.template.json` (→ `package.json`).
+These handle dependency install, music generation, and rendering. Rendering locally is far
+faster than in a sandbox.
+
 ```bash
+./run.sh                         # install + music + render all presets
 node make-music.js               # optional: create background music (music.wav)
 node render.js --preset youtube  # 16:9 landscape (default) -> *-youtube.mp4
 node render.js --preset tiktok   # 9:16 vertical -> *-tiktok.mp4 (also for Shorts/Reels)
+```
+
+### render.js control flags
+`node render.js [--preset youtube|tiktok|youtube,tiktok|all] [flags]`
+
+| Flag | Meaning |
+|------|---------|
+| `--frames-only` | Render and **save** frames to `frames_<preset>/`, skip video stitching |
+| `--video-only`  | Skip rendering; **stitch video from already-saved frames** |
+| `--reuse-frames`| Reuse existing frames if the count is sufficient (skip render) |
+| `--clean`       | Delete the preset's frame dir before rendering |
+| `--no-music`    | Output video without background music |
+| `--fps <n>` / `--scale <n>` | Frame rate / deviceScaleFactor (defaults 60 / 2) |
+
+**Frames are persisted** in `frames_<preset>/` (never auto-deleted unless `--clean`). This
+lets you render once and re-stitch multiple times with `--video-only`. Separate-step example:
+
+```bash
+node render.js --preset all --frames-only    # 1) render + save all frames
+node render.js --preset youtube --video-only # 2) stitch YouTube video from saved frames
+node render.js --preset tiktok  --video-only # stitch TikTok video, no re-render
 ```
 
 ## Platform aspect ratios (YouTube vs TikTok)
